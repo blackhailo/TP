@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tile Planer v0.01</title>
+        <link rel="stylesheet" href="css/draft.css">
+        <script src="scripts/jquery-1.11.3.min.js"></script>
+    </head>
+    <body>
+        <div class="programHeader">Tile Planer v0.01</div>
+        <div class="headerItem">current projects:</div>
+        <!-- PROJECT_LIST -->
+        
+        <div class="headerItem">create new project</div>
+        <input id="newInput" type="text">
+        <input id="newButton" type="button" value="create">
+        
+    </body>
+    <script>
+        $("#newButton").bind("click", function(){
+            projectName = $("#newInput").val();
+            
+            $.ajax({
+                type: "POST",
+                url: "new",
+                data: {"project_name":projectName},
+                success: function(result){
+                    setTimeout(function() {
+                        window.location.replace("/" + result);
+                    }, 1000);
+                    
+                    
+                },
+                dataType: "text"
+            });
+        });
+        
+        
+    </script>
+</html>

@@ -1,0 +1,96 @@
+/* Base styles from Pure */
+html, body {
+    background-color: #efeee3;
+    margin: 0px;
+    /*background-color: rgba(255, 255, 255, .5);*/
+}
+
+.main_div {
+    float: left;
+    width: 100%;
+    height: 100%;
+    background-color: lightblue;
+}
+
+.button {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: lightgreen;
+    margin: 10px;
+}
+
+.recipy_list {
+    float: left;
+    width: 750px;
+    height: 750px;
+    background-color: purple;
+    margin: 10px;
+}
+
+.recipy_list a {
+    float: left;
+    clear: left;
+    color: black;
+}
+textarea {
+    float: left;
+    width: 150px;
+    height: 150px;
+    margin: 10px;
+}
+
+.picture {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: yellow;
+}
+
+.title {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: grey;
+}
+
+.ing_list {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: teal;
+}
+
+.description {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: pink;
+}
+
+.hints {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background-color: white;
+}
+
+/*.header {
+    float: left;
+    width: 100%;
+    height: 100px;
+    
+}
+
+.pinkbox {
+    background-color: pink;
+    width: 100px;
+    height: 100px;
+}
+
+.right {
+    float: right;
+}
+.left {
+    float: left;
+}*/

@@ -1,0 +1,311 @@
+/* WORK */
+.selected {
+    border: 2px solid #1E90FF !important;
+    padding: 0px !important;
+}
+
+
+/* NEW */
+.programHeader {
+    font-weight: bold;
+    font-size: 20px;
+    font-style: italic;
+    float: left;
+    clear:left;
+    padding: 5px;
+}
+
+.headerItem {
+    font-weight: bold;
+    float: left;
+    clear:left;
+    padding: 5px;
+}
+.projectItem {
+    float:left;
+    clear: left;
+    padding: 5px;
+}
+
+#newInput, #newButton{
+    float: left;
+    clear: left;
+    margin: 5px;
+}
+
+/* EDIT */
+body {
+    margin: 0px;
+    font-family: Roboto;
+}
+
+.menuHeader {
+    float:left;
+    width: 100%;
+    height: 20px;
+    padding-left: 2px;
+    
+    box-sizing: border-box;
+    font-weight: bold;
+    color: rgb(240, 240, 240);
+    
+    border-bottom: 1px solid black;
+    background-color: rgb(0, 0, 0);
+}
+
+.menuButton {
+    float:left;
+    width: 100%;
+    height: 20px;
+    padding-left: 2px;
+    
+    box-sizing: border-box;
+    border-bottom: 1px solid;
+    border-left: 1px solid;
+    border-right: 1px solid;
+    cursor: pointer;
+    
+    background-color: rgb(240, 240, 240);
+}
+
+.menuButton:hover {
+    background-color: rgb(240, 200, 240);
+}
+
+#clickClickMenu{
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    width: 100px;
+    height: auto;
+    z-index: 10;
+    display: none;
+}
+
+#editPromt {
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    width: 100px;
+    height: 100px;
+    z-index: 15;
+    background-color: rgb(240, 240, 240);
+    display: none;
+    box-sizing: border-box;
+    border: 1px solid;
+    padding: 20px;
+}
+
+#editPromt input {
+    float: left;
+}
+
+.crumbLink {
+    text-decoration: none;
+    color: #000bbe;
+}
+
+.clearLeft {
+    clear: left;
+}
+
+.block_label {
+    margin: 0px;
+    font-size: 15px;
+    float: left;
+    height: 14px;
+    padding: 3px;
+    width: calc(100% - 6px);    
+}
+
+#super_tile {
+    float: left;
+    width: calc(100% - 1px);
+    overflow: hidden;
+}
+
+.super_label{
+    /*background-color: green;*/
+    margin: 0px;
+    font-size: 15px;
+    float: left;
+    height: 34px;
+    width: calc(100% - 88px);
+    padding: 3px;
+}
+
+#project_buttons {
+    height: 38px;
+    width: 80px;
+    float: left;
+    padding: 1px;
+    /*background-color: yellow;*/
+}
+
+.p_button {
+    box-sizing: border-box;
+    border: 0px solid;
+    padding: 1px;
+    
+    height: 38px;
+    width: 38px;
+    
+    margin-left: 2px;
+    /*background-color: grey;*/
+    float: right;
+    
+    cursor: pointer;
+}
+
+.p_button:hover {
+    border: 1px solid;
+    padding: 0px;
+    /*background-color: white;*/
+}
+
+.p_button img {
+    padding: 3px;
+}
+
+.block {
+    float: left;
+    overflow: hidden;
+    padding: 1px;
+    
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.regular_block {
+    box-sizing: border-box;
+    border: 1px solid;
+}
+.small_block  {
+    box-sizing: border-box;
+    border: 1px solid;
+}
+.small_block .hidden_label {
+    display: none;
+}
+
+.new  {
+    background-color: rgb(200, 200, 200);
+}
+
+.default {
+    background-color: rgb(240, 240, 240);
+}
+
+.started {
+    background-color: rgb(255,255,224);
+}
+
+.done {
+    background-color: rgb(144,238,144);
+}
+
+.issues {
+    background-color: rgb(240,128,128);
+}
+
+/* LEGEND */
+.close {
+    position: relative;
+    float: right;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.close::before, .close::after {
+    content: '';
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    top: 50%;
+    left: 0;
+    margin-top: -1px;
+    background: #000;
+}
+.close::before {
+    transform: rotate(45deg);
+}
+.close::after {
+    transform: rotate(-45deg);
+}
+
+
+#moreHeader {
+    height: 20px;
+    float: left;
+    width: 100%;
+    /*background-color: green;*/
+}
+
+#morePanel {
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    min-width: 100px;
+    z-index: 15;
+    background-color: rgb(240, 240, 240);
+    display: none;
+    box-sizing: border-box;
+    border: 1px solid;
+}
+
+#legend_desc {
+    box-sizing: border-box;
+    border: 1px solid;
+    float: left;
+    padding: 5px;
+    padding-bottom: 0px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    clear: left;
+}
+
+#current_users_desc {
+    box-sizing: border-box;
+    border: 1px solid;
+    float: left;
+    padding: 5px;
+    padding-bottom: 0px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.color_square {
+    box-sizing: border-box;
+    border: 1px solid;
+    clear: left;
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    float: left;
+}
+.legend_label {
+    height: 20px;
+    float: left;
+}
+
+/* USER LEGEND */
+#USER_1 {
+    background: repeating-linear-gradient(
+        45deg,
+        #606dbc,
+        #606dbc 5px,
+        rgb(240, 240, 240) 5px,
+        rgb(240, 240, 240) 10px
+    );    
+}
+

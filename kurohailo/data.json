@@ -1,0 +1,126 @@
+{
+    "label":"Tile planner",
+    "block_list":[
+        {"label":"External data",
+         "status":0,
+         "block_list":[
+            {"label":"json based data",
+             "status":3,
+             "block_list":[]},
+            {"label":"js load of data",
+             "status":3,
+             "block_list":[]},
+            {"label":"save json to server",
+             "status":3,
+             "block_list":[]},
+            {"label":"load json from server",
+             "status":3,
+              "block_list":[]},
+            {"label":"allow multible",
+            "status":0,
+            "block_list":[
+                {"label":"partial saves",
+                 "status":1,
+                 "block_list":[]},
+                {"label":"implement log",
+                 "status":0,
+                 "block_list":[]}
+            ]}
+        ]},
+        {"label":"Calculate layout",
+         "status":0,
+          "block_list":[
+            {"label":"better use of space on 5+ blocks",
+             "status":3,
+             "block_list":[]},
+            {"label":"Hide text when not able to display",
+             "status":3,
+             "block_list":[
+                {"label":"hide event if to small",
+                 "status":3,
+                 "block_list":[]}
+            ]},
+            {"label":"focus and rezoom",
+             "status":0,
+             "block_list":[
+                {"label":"make breadcromb path",
+                 "status":0,
+                 "block_list":[]}
+            ]},
+            {"label":"prioritize thebest layout",
+             "status":3,
+             "block_list":[]}
+            ]},
+            {"label":"Right click menu",
+             "status":0,
+             "block_list":[
+                {"label":"Add a remove option",
+                 "status":3,
+                 "block_list":[
+                    {"label":"confirmation of delete",
+                     "status":3,
+                     "block_list":[]}
+                ]},
+                {"label":"Add a add option",
+                "status":3,
+                "block_list":[]},
+                {"label":"add a rename option",
+                "status":3,
+                "block_list":[]},
+                {"label":"add a change status option",
+                "status":3,
+                "block_list":[]},
+                {"label":"dropdown on the edge of the window recalcs position",
+                "status":3,
+                "block_list":[]},
+                {"label":"add a new block status cannot be assigned again",
+                "status":3,
+                "block_list":[]}
+            ]},
+            {"label":"Allow multible projects",
+             "status":0,
+             "block_list":[
+                {"label":"add a create new project page",
+                 "status":3,
+                 "block_list":[]},
+                {"label":"fix save to project bug",
+                 "status":3,
+                 "block_list":[]},
+                {"label":"show a list of current projects",
+                "status":3,
+                "block_list":[]}
+            ]},
+            {"label":"Multible working and saving in the same project",
+             "status":0,
+             "block_list":[
+                {"label":"show user focus",
+                 "status":0,
+                 "block_list":[]},
+                {"label":"show user list",
+                 "status":3,
+                 "block_list":[
+                    {"label":"make user button","status":3,"block_list":[]},
+                    {"label":"user overlay legend","status":3,"block_list":[]}]}]},
+             {"label":"Make web version","status":1,"block_list":[
+                {"label":"push minimal prototype","status":3,"block_list":[]},
+                {"label":"add version nr","status":3,"block_list":[]},
+                {"label":"add import feature","status":0,"block_list":[]},
+                {"label":"add export feature","status":0,"block_list":[]}]},
+             {"label":"Edit promt","status":0,"block_list":[
+                {"label":"accept, cancel? yes, no?","status":0,"block_list":[]}]},
+             {"label":"Interactions","status":0,"block_list":[
+                {"label":"drag reorder","status":0,"block_list":[]},
+                {"label":"drag to another block","status":0,"block_list":[]}]},
+             {"label":"styling","status":0,"block_list":[
+                {"label":"smallBlock","status":3,"block_list":[]},
+                {"label":"block","status":3,"block_list":[]},
+                {"label":"personal marking color for taken task","status":3,"block_list":[]}]},
+             {"label":"bugs","status":0,"block_list":[
+                {"label":"using the single qoute in label crashes the load","status":0,"block_list":[]}]},
+             {"label":"Main data model","status":0,"block_list":[
+                {"label":"tree node save structure","status":0,"block_list":[
+                    {"label":"save subtree","status":4,"block_list":[]},
+                    {"label":"make a bigtable node structure","status":4,"block_list":[]}
+                ]}
+            ]}
+]}
