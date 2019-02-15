@@ -14,7 +14,7 @@ class TPStore_v2(ndb.Model):
     
     ordering = ndb.IntegerProperty()
     
-    stepCounter = ndb.IntegerProperty()
+    # stepCounter = ndb.IntegerProperty()
     parentPath = ndb.IntegerProperty(repeated=True)
 
 def hack():
@@ -123,14 +123,14 @@ def insertTP_v2(projectID, nodeID, parentID=None):
         uniqueS = "%s_%s" % (projectID, parentID)
         parentNode = TPStore_v2.get_by_id(uniqueS)
         
-        TPItem.stepCounter = parentNode.stepCounter + 1
+        # TPItem.stepCounter = parentNode.stepCounter + 1
         itemParentPath = []
         itemParentPath.extend(parentNode.parentPath)
         itemParentPath.append(nodeID)
         
         TPItem.parentPath = itemParentPath
     else:
-        TPItem.stepCounter = 1
+        # TPItem.stepCounter = 1
         TPItem.parentPath = [nodeID]
     
     TPItem.put()
@@ -140,8 +140,14 @@ def modifyTP(projectID, nodeID, nodeData):
     TPItem = TPStore_v2.get_by_id(uniqueS)
     
     for key, value in nodeData.items():
+        if key == "parent_path":
+            key = "parentPath"
+        
         if hasattr(TPItem, key):
-            setattr(TPItem, key, value)
+            try:
+                setattr(TPItem, key, value)
+            except:
+                raise ValueError(value)
     
     TPItem.put()
     

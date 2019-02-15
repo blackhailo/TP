@@ -41,19 +41,33 @@
 </body>
 <script>
     /**
+     * BACKEND SYNC
+     **/
+    function syncTileData(tile, successFunc){
+        dataComponent = JSON.stringify({
+            "node_id_list": [tile.id],
+            "label": tile.label,
+            "status": tile.status,
+            "ordering": tile.ordering,
+            "parent_path": tile.parentPath
+        });
+        $.ajax({
+            type: "POST",
+            url: "update/" + TS.PID,
+            data: {
+                "change_type":"modify",
+                "data": dataComponent
+                },
+            success: successFunc,
+            dataType: "json"
+        });
+    }
+    
+    /**
      * UTIL FUNCTIONS
      **/
     function findNode(nID){
         return $("div[nid='" + nID + "']");
-    }
-    
-    class DragState {
-        constructor(){
-            this.dragStart = null;
-            this.dragObj = null;
-            this.parentObj = null;
-            this.gridDimensions = null;
-        }
     }
     
     class TileNode {
@@ -73,6 +87,15 @@
         }
     }
     
+    class DragState {
+        constructor(){
+            this.dragStart = null;
+            this.dragObj = null;
+            this.parentObj = null;
+            this.gridDimensions = null;
+        }
+    }
+    
     class TileState {
         constructor(){
             const urlComp = window.location.href.split("/");
@@ -89,6 +112,8 @@
             this.tileLookup = {};
             this.tileChildren = {};
             this.selectedTileIDList = [];
+            
+            this.tileClipboard = [];
         }
         
         /* TILE FUNCS */
@@ -96,34 +121,60 @@
             return this.tileLookup[tileID];
         }
         
+        modifyTile(tileID, attrName, attrValue){
+            const currentTile = this.getTile(tileID);
+            
+            currentTile[attrName] = attrValue;
+        }
+        
         setTile(tileData){
             const tileNode = new TileNode(tileData);
             this.tileLookup[tileData.id] = tileNode;
             this.tileChildren[tileData.id] = [];
+        }
+        
+        initParentAsso(){
+            const tileChildren = this.tileChildren;
+            const setParentAsso = this.setParentAsso;            
+            Object.values(this.tileLookup).forEach(function(tile){
+                setParentAsso(tileChildren, tile);
+            });
             
-            if (tileNode.parentID !== null){
-                const parentChildList = TS.getTileChildren(tileNode.parentID);
-                
-                if (parentChildList){
-                    parentChildList.push([tileData.id, tileData.ordering]);
-                
-                    //TODO: OPTIMIZE BETTER INIT SORT
-                    parentChildList.sort(function(a,b){
-                        return a[1] - b[1];
-                    });
-                }
+            const reorderFunc = this.recalcTileOrdering;
+            Object.values(tileChildren).forEach(function(tileSiblingList){
+                reorderFunc(tileSiblingList);
+            });
+        }
+        
+        setParentAsso(tileChildren, tile){
+            if(tile.parentID !== null){
+                const childList = tileChildren[tile.parentID];
+                childList.push(tile);
             }
         }
+        
+        removeParentAsso(tile){            
+            const parentChildList = this.tileChildren[tile.parentID];
+            
+            const indexOfTile = parentChildList.indexOf(tile);            
+            if (indexOfTile > -1){
+                parentChildList.splice(indexOfTile, 1);
+            }
+        }
+        
+        recalcTileOrdering(tileList){
+            tileList.sort(function(a, b){
+                return a.ordering - b.ordering;
+            });
+        }
+        
         
         removeCachedTile(tileID){
             delete this.tileLookup[tileID];
             delete this.tileChildren[tileID]; 
         }
         
-        /* TILE CHILDREN FUNCS */
-        getTileChildren(parentTileID){
-            return this.tileChildren[parentTileID];
-        }
+        
         
         /* SELECTION */
         getSelectionList(){
@@ -132,6 +183,8 @@
         
         removeTileFromSelection(tile) {
             const tileID = tile.attr("nid");
+            const selectedTileIDList = this.getSelectionList();
+            
             selectedTileIDList.splice(selectedTileIDList.indexOf(tileID), 1);
             tile.removeClass("selected");
         }
@@ -149,16 +202,66 @@
                 targetTile.removeClass("selected");
             }
         }
+        
+        /* Util Functions */
+        copyToTileClipboard() {
+            this.tileClipboard = this.selectedTileIDList.slice();
+            
+            for (let i = 0; i < this.tileClipboard.length; i++){
+                const currentNode = findNode(this.tileClipboard[i]);
+                
+                currentNode.addClass("cutted");
+            }
+            
+            this.resetSelectedTiles();
+        }
+        
+        clearTileClipboard(){
+            for (let i = 0; i < this.tileClipboard.length; i++){
+                const currentNode = findNode(this.tileClipboard[i]);
+                
+                currentNode.removeClass("cutted");
+            }
+            
+            this.tileClipboard = [];
+        }
     }
     
     var origin = null;
     var editType = null;
     
+    var DS = new DragState();
     var TS = new TileState();
     
-    //var nodeLookup = {};
-    var nodeChildren = {};
-    var selectedNodes = [];
+    function dragInteraction(event){
+        if (DS.dragObj && this != DS.dragObj){
+            const targetTileID = $(this).attr("nid");
+            const targetTile = TS.getTile(targetTileID);
+            
+            const dragTileID = $(DS.dragObj).attr("nid");
+            const dragTile = TS.getTile(dragTileID);
+            
+            // DRAGGED TO PARENT
+            if (dragTile.parentID === targetTile.id){
+                let orderNr = 1;
+                reorderFunc(dragTileID, orderNr);
+            } else {
+                siblingList = TS.tileChildren[dragTile.parentID];
+                //IS A SIBLING
+                if (siblingList.indexOf(targetTile) != -1){
+                    let orderNr = null;
+                    if (targetTile.ordering - dragTile.ordering > 0){
+                        orderNr = targetTile.ordering + 1;
+                    } else {
+                        orderNr = targetTile.ordering;
+                    }
+                    reorderFunc(dragTileID, orderNr);
+                }
+            }
+        }
+        DS.dragObj = null;
+        event.stopPropagation();
+    }
     
     function removeAjax(targetID, succesFunc) {
         $.ajax({
@@ -171,8 +274,6 @@
         });
     }
     
-    
-    
     function removeTile(originID, reload=false) {
         const target = TS.getTile(originID);
         
@@ -180,28 +281,11 @@
             return;
         }
         
-        const targetChildList = TS.getTileChildren(originID);
-        while (targetChildList.length > 0){
-            childTargetID = targetChildList.shift();
-            removeTile(childTargetID);
-        }
-        
         success = function(){
-            if (target.parent_path.length > 1){
-                closestParentID = target.parent_path[target.parent_path.length - 2];
-                closestParentChildList = TS.getTileChildren(closestParentID);
-                
-                const idIndex = parseInt(originID);
-                if (idIndex !== undefined){
-                    closestParentChildList.splice(closestParentChildList.indexOf(idIndex), 1);
-                }
-            }
-            
+            TS.removeParentAsso(target);
             TS.removeCachedTile(originID);
             
-            if (reload){
-                loadData();
-            }
+            loadData();
         };
         
         removeAjax(originID, success);
@@ -212,27 +296,13 @@
         originID = origin.attr("nid");
         
         if (editType == "rename"){
-            inputField = editPromt.children("input:text");
-            newLabel = inputField.val();
+            const inputField = editPromt.children("input:text");
+            const newLabel = inputField.val();
+            const tile = TS.getTile(originID);
+            tile.label = newLabel;
             
-            dataComponent = JSON.stringify({
-                "node_id_list": [originID],
-                "label": newLabel
-            });
-            
-            $.ajax({
-                type: "POST",
-                url: "update/" + TS.PID,
-                data: {
-                    "change_type":"modify",
-                    "data": dataComponent
-                    },
-                success: function(){
-                    targetTile = TS.getTile(originID);
-                    targetTile.label = newLabel;
-                    loadData();
-                },
-                dataType: "json"
+            syncTileData(tile, function(){
+                loadData();            
             });
         } else if (editType == "remove"){
             const selectionList = TS.getSelectionList();
@@ -284,22 +354,50 @@
         window.location.href = urlComp.split("_")[0] + "_" + originID;
     }
     
-    function reorderFunc(){
-        //TODO make a drag and drop that calcs the grid pos index on release
-        gridPosIndex = 0;
-        
-        //TODO get selected tile reorder siblings accordingly
-        //TODO make a combined update call of new sibling order
-        
-        
-        
-        const selectedTileIDList = TS.getSelectionList();
-        
-        for (let i = 0; i < selectedTileIDList.length; i++){
-            const cID = selectedTileIDList[i];
+    function reorderFunc(nID, reorderNr){
+        function modifyServerTile(tID, orderNr){
+            dataComponent = JSON.stringify({
+                "node_id_list": [tID],
+                "ordering": orderNr
+            });
             
-            console.log(cID);
+            $.ajax({
+                type: "POST",
+                url: "update/" + TS.PID,
+                data: {
+                    "change_type":"modify",
+                    "data": dataComponent
+                    },
+                success: function(){
+                },
+                dataType: "json"
+            });
         }
+        
+        changedTile = TS.getTile(nID);
+        parentTile = TS.getTile(changedTile.parentID);
+        
+        reorderTileList = TS.tileChildren[changedTile.parentID];
+        
+        let orderingNrIter = reorderNr + 1;
+        for (let i = 0; i < reorderTileList.length; i++){
+            tile = reorderTileList[i];
+            
+            if (tile.id != nID){
+                if (tile.ordering >= reorderNr){
+                    tile.ordering = orderingNrIter;           
+                    TS.modifyTile(tile.id, "ordering", orderingNrIter);
+                    modifyServerTile(tile.id, orderingNrIter);
+                    orderingNrIter = orderingNrIter + 1;
+                }
+            } else {
+                tile.ordering = reorderNr;
+                TS.modifyTile(tile.id, "ordering", reorderNr);
+                modifyServerTile(tile.id, reorderNr);
+            }
+        }
+        TS.recalcTileOrdering(reorderTileList);
+        loadData();
         
         rightClickMenu = $("#clickClickMenu");
         rightClickMenu.css("display", "none");
@@ -456,8 +554,7 @@
                            ["zoom", function (){zoom(origin);}],
                            ["add", function (){addFunc(origin);}],
                            ["rename", function (){renameFunc(origin);}],
-                           ["remove", function (){removeFunc(origin);}],
-                           ["reorder", function (){reorderFunc();}]];
+                           ["remove", function (){removeFunc(origin);}]];
         } else {
             /* SUPER BLOCK DROPDOWN */
             contentList = [["Modify", "Header"],
@@ -527,18 +624,20 @@
             rawCrumbField = $('#crumb_field').val();
             dataList = JSON.parse(rawCrumbField);
             for (let i=0; i<dataList.length; i++){
-                TS.setTile(dataList[i]);              
+                TS.setTile(dataList[i]);
             }
             
             rawDataField = $('#data_field').val();
             dataList = JSON.parse(rawDataField);
-            dataList.sort(function(a, b){
-                return a.parent_path.length - b.parent_path.length;
-            });
-            
+            //dataList.sort(function(a, b){
+            //    return a.parent_path.length - b.parent_path.length;
+            //});
+            //
             for (let i=0; i<dataList.length; i++){
                 TS.setTile(dataList[i]);
             }
+            
+            TS.initParentAsso();
         }
     }
     
@@ -565,6 +664,7 @@
             
             event.stopPropagation();
         });
+        superTile.bind("mouseup", dragInteraction);
         
         /* EMPTY OLD DATA */
         superTile.children('div').each(
@@ -598,15 +698,12 @@
         superTileLabelNode.append(parentLabelNodeList);
         superTile.attr("nid", TS.parentTileID);
         
-        const childrenList = TS.getTileChildren(TS.parentTileID);
+        const childrenList = TS.tileChildren[TS.parentTileID];
         const nrOfSiblings = childrenList.length;
         
         for (let ithElement = 0; ithElement < nrOfSiblings; ithElement++){
-            childIDAndOrder = childrenList[ithElement];
-            childID = childIDAndOrder[0];
-            
-            childNode = TS.getTile(childID);
-            renderTileQueue.push(childNode);
+            childTile = childrenList[ithElement];
+            renderTileQueue.push(childTile);
         }
         
         doSetup = true;
@@ -632,7 +729,7 @@
             parentHeight = parentTile.height() - 20;
         }
         
-        nrOfSiblings = TS.getTileChildren(renderTile.parentID).length;
+        nrOfSiblings = TS.tileChildren[renderTile.parentID].length;
         
         gridDimensions = Math.ceil(Math.sqrt(nrOfSiblings));
         
@@ -648,8 +745,8 @@
             }
         }
         
-        let onePxXOffset = false;
-        let onePxYOffset = false;
+        //let onePxXOffset = false;
+        //let onePxYOffset = false;
         childSpace = parentWidth / gridDimensions;
         
         if (childSpace < 60){
@@ -710,7 +807,6 @@
                 event.stopPropagation();
             });
             
-            
             injectTile.bind("mousedown", function(event) {
                 if (event.which != 3){
                     rightClickMenu = $("#clickClickMenu");
@@ -718,26 +814,23 @@
                 }
                 
                 leftClickTile(event, $(this));
+                //this.dragStart = null;
+                DS.dragObj = this;
+                //        this.parentObj = null;
+                //        this.gridDimensions = null;                
                 
                 event.preventDefault();
                 event.stopPropagation();
             });
             
-            injectTile.bind("mouseup", function(event) {
-                console.log(event);
-                console.log(this);
-                event.stopPropagation();
-            });
+            injectTile.bind("mouseup", dragInteraction);
         }
         
-        const childrenList = TS.getTileChildren(renderTile.id);
+        const childrenList = TS.tileChildren[renderTile.id];
         const nrOfChildSiblings = childrenList.length;
         for (let ithElement = 0; ithElement < nrOfChildSiblings; ithElement++){
-            childIDAndOrder = childrenList[ithElement];
-            childID = childIDAndOrder[0];
-            
-            childNode = TS.getTile(childID);
-            renderTileQueue.push(childNode);
+            childTile = childrenList[ithElement];
+            renderTileQueue.push(childTile);
         }
     }
     
@@ -768,6 +861,90 @@
         loadData();
     };
     
+    $(window).keydown(function(event){
+        function downAssignParentPath(newParentTile, tile){
+            const newParentPath = newParentTile.parentPath.slice();
+            newParentPath.push(tile.id);
+            
+            tile.parentID = newParentTile.id;
+            tile.parentPath = newParentPath;
+            
+            const tileChildren = TS.tileChildren[tile.id];
+            for (let i = 0; i < tileChildren.length; i++){
+                childTile = tileChildren[i];
+                downAssignParentPath(tile, childTile);
+                
+                syncTileData(childTile);
+            }
+        }
+        
+        function cutFunc(){
+            TS.copyToTileClipboard();
+        }
+        
+        function pasteFunc(){
+            const selectedList = TS.getSelectionList();
+            const pasteTargetID = selectedList[0];
+            
+            const cutIDList = TS.tileClipboard;
+            const cutID = cutIDList[0];
+            
+            const pasteTile = TS.getTile(pasteTargetID);
+            const cutTile = TS.getTile(cutID);
+            
+            if (cutTile === undefined || pasteTile === undefined){
+                return;
+            }
+            
+            if (cutTile && pasteTile.id === cutTile.id || pasteTile.id === cutTile.parentID){
+                return;
+            }
+            
+            const pasteTileChildren = TS.tileChildren[pasteTargetID];
+            
+            //remove cutTile from its parent
+            TS.removeParentAsso(cutTile);
+            
+            //modify cutTile parentID and parentpath
+            downAssignParentPath(pasteTile, cutTile);
+            
+            //give new ordering to cutTile
+            let newOrdering = 1;
+            if (pasteTileChildren.length > 0){
+                newOrdering = pasteTileChildren[pasteTileChildren.length - 1].ordering + 1;
+            }
+            cutTile.ordering = newOrdering;
+            
+            //add cutTile to pasteTile childList
+            TS.setParentAsso(TS.tileChildren, cutTile);
+            
+            TS.clearTileClipboard();
+            
+            //backend
+            syncTileData(cutTile, function(){
+                loadData();            
+            });
+            
+            loadData();
+        }
+        
+        //ctrl x cut selection tile
+        
+        //ctrl v paste selection tile
+        hotkeys = {"c": cutFunc,
+                   "v": pasteFunc};
+        
+        if (event.ctrlKey && hotkeys[event.key] !== undefined){
+            boundFunc = hotkeys[event.key];
+            
+            if (boundFunc){
+                boundFunc();
+            }
+            
+            ////event.preventDefault();
+        }
+    });
+    
     $(window).keypress(function(event){
         if (event.which == 13){
             editPromt = $("#editPromt");
@@ -775,14 +952,20 @@
                 acceptEdit();
             }
         }
+        //event.preventDefault();
     });
     
     $(window).mousemove(function(event) {
+        //if (DS.dragObj){
+        //    console.log("draging");
+        //}
+        
         //console.log(event);
     });
     
     $(window).mouseup(function(event) {
-        //console.log(event);
+        console.log("EY");
+        DS.dragObj = null;
     });
 
 </script>

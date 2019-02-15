@@ -3,7 +3,10 @@
     border: 2px solid #1E90FF !important;
     padding: 0px !important;
 }
-
+.cutted {
+    border: 2px solid red !important;
+    padding: 0px !important;
+}
 
 /* NEW */
 .programHeader {

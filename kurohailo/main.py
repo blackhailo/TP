@@ -49,12 +49,7 @@ class UpdateHandler(webapp2.RequestHandler):
                 itemDict = DSStructure.modifyTP(PID, nodeID, data) # INSERT NODE DATA
             
             self.response.write(json.dumps(itemDict))
-        
-# class NextNID(webapp2.RequestHandler):
-#     def get(self, PID):
-        # DSStructure.insertTP(int(PID), TPDataString)
-    # 
- 
+
 class MainHandler(webapp2.RequestHandler):
     def get(self, PID, tileID=None):
         if tileID == None:
