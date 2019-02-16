@@ -174,8 +174,6 @@
             delete this.tileChildren[tileID]; 
         }
         
-        
-        
         /* SELECTION */
         getSelectionList(){
             return this.selectedTileIDList;
@@ -326,6 +324,8 @@
                     ordering = response.ordering;
                     
                     TS.setTile(response);
+                    TS.setParentAsso(TS.tileChildren, TS.getTile(newNodeID));
+                    
                     loadData();
                 },
                 dataType: "json"
@@ -506,21 +506,28 @@
         });
     }
     
-    function leftClickTile(event, origin){
+    function clickTile(event, origin){
         originLabelNode = origin.children(".block_label");
-        //console.log(originLabelNode.text());
+        console.log(origin, event);
         
-        if (event.shiftKey) {
-            TS.addTileToSelection(origin);
-        } else if (event.ctrlKey) {
-            if (origin.hasClass("selected")){
-                TS.removeTileFromSelection(origin);
-            } else {
+        if (event.which == 3){
+            if (origin.hasClass("selected") === false){
+                TS.resetSelectedTiles();
                 TS.addTileToSelection(origin);
             }
         } else {
-            TS.resetSelectedTiles();
-            TS.addTileToSelection(origin);
+            if (event.shiftKey) {
+                TS.addTileToSelection(origin);
+            } else if (event.ctrlKey) {
+                if (origin.hasClass("selected")){
+                    TS.removeTileFromSelection(origin);
+                } else {
+                    TS.addTileToSelection(origin);
+                }
+            } else {
+                TS.resetSelectedTiles();
+                TS.addTileToSelection(origin);
+            }
         }
     }
     
@@ -813,7 +820,7 @@
                     rightClickMenu.css("display", "none");
                 }
                 
-                leftClickTile(event, $(this));
+                clickTile(event, $(this));
                 //this.dragStart = null;
                 DS.dragObj = this;
                 //        this.parentObj = null;
