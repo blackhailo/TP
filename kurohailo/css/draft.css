@@ -90,7 +90,6 @@ body {
     left: 40px;
     top: 40px;
     width: 100px;
-    height: 100px;
     z-index: 15;
     background-color: rgb(240, 240, 240);
     display: none;
@@ -99,11 +98,14 @@ body {
     padding: 20px;
 }
 
-#editPromt input {
+#editPromt textarea {
     float: left;
+    width: 350px;
+    height: 100px;
 }
 
 .crumbLink {
+    line-height: 34px;
     text-decoration: none;
     color: #000bbe;
 }
@@ -112,34 +114,51 @@ body {
     clear: left;
 }
 
-.block_label {
+.float {
+    float: left;
+}
+
+.tile_label {
     margin: 0px;
     font-size: 15px;
     float: left;
-    height: 14px;
+    width: 100%;
     padding: 3px;
-    width: calc(100% - 6px);    
+    
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.outer_label_sizing {
+    height: 34px;
+    width: calc(100% - 208px);
+}
+
+.inner_label_sizing {
+    height: 14px;
+    width: calc(100% - 6px);
+}
+
+#super_tile_indicator {
+    float: left;
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    
+    box-sizing: border-box;
+    
+    border: 1px solid;
 }
 
 #super_tile {
     float: left;
     width: calc(100% - 1px);
-    overflow: hidden;
-}
-
-.super_label{
-    /*background-color: green;*/
-    margin: 0px;
-    font-size: 15px;
-    float: left;
-    height: 34px;
-    width: calc(100% - 88px);
-    padding: 3px;
 }
 
 #project_buttons {
     height: 38px;
-    width: 80px;
+    width: 160px;
     float: left;
     padding: 1px;
     /*background-color: yellow;*/
@@ -170,10 +189,13 @@ body {
     padding: 3px;
 }
 
-.block {
+.tile {
     float: left;
     overflow: hidden;
     padding: 1px;
+    
+    box-sizing: border-box;
+    border: 1px solid;
     
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -184,17 +206,119 @@ body {
                                   supported by Chrome and Opera */
 }
 
-.regular_block {
-    box-sizing: border-box;
-    border: 1px solid;
+.small_square{
+    width: 20px;
+    height: 20px;
 }
-.small_block  {
-    box-sizing: border-box;
-    border: 1px solid;
-}
-.small_block .hidden_label {
+
+#active_filter_count {
+    position: fixed;
+    top: 2px;
+    margin-top: 1px;
+    margin-left: 23px;
+    width: 12px;
+    height: 12px;
+    z-index: 2;
+    background-color: red;
+    text-align: center;
+    line-height: 13px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    
     display: none;
 }
+
+#promt_modal {
+    top: 60px;
+    left: 10%;
+    position: absolute;
+    background-color: white;
+    width: 80%;
+    border: 1px solid;
+    box-sizing: border-box;
+    
+    display:none;
+}
+#promt_close {
+    float: left;
+    padding: 6px;
+    padding-top: 5px;
+    padding-bottom: 7px;
+    height: 18px;
+    margin-top: 5px;
+    margin-right: 5px;
+    border-bottom: 1px solid;
+}
+
+#promt_header {
+    float: left;
+    width: calc(100% - 45px);
+    height: 30px;
+    line-height: 30px;
+    border-bottom: 1px solid;
+    padding-left: 5px;
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+#promt_content {
+    float: left;
+    width: calc(100% - 10px);
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+#promt_footer {
+    float: left;
+    width: calc(100% - 10px);
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-top: 1px solid;
+}
+
+.promt_submit {
+    padding: 5px;
+    margin-top: 5px;
+    margin-left: 5px;
+    border: 1px solid;
+    cursor: pointer;
+}
+/* PROMT CONTENT */
+.filter_button {
+    float: left;
+    padding: 5px;
+    margin-top: 5px;
+    margin-left: 5px;
+    border: 1px solid;
+    cursor: pointer;
+    
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.filter_active {
+    background-color: grey;
+}
+
+
+
+#filter_reset_button {
+    float: right;
+}
+
+#filter_apply_button {
+    float: right;
+}
+
+/* STATUS COLORS */
 
 .new  {
     background-color: rgb(200, 200, 200);
@@ -216,10 +340,16 @@ body {
     background-color: rgb(240,128,128);
 }
 
-/* LEGEND */
-.close {
-    position: relative;
+.left {
+    float: left;
+}
+.right {
     float: right;
+}
+
+/* LEGEND */
+.close_cross {
+    position: relative;
     display: inline-block;
     width: 18px;
     height: 18px;
@@ -227,7 +357,7 @@ body {
     cursor: pointer;
 }
 
-.close::before, .close::after {
+.close_cross::before, .close_cross::after {
     content: '';
     position: absolute;
     height: 2px;
@@ -237,10 +367,10 @@ body {
     margin-top: -1px;
     background: #000;
 }
-.close::before {
+.close_cross::before {
     transform: rotate(45deg);
 }
-.close::after {
+.close_cross::after {
     transform: rotate(-45deg);
 }
 
@@ -312,3 +442,55 @@ body {
     );    
 }
 
+/* info box */
+#infoBox {
+    position: absolute;
+    display: none;
+    left: 10px;
+    top: 10px;
+    width: 98px;
+    height: 98px;
+    
+    border: 1px solid;
+    
+    background-color: white;
+    
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.grabbed {
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
+}
+
+#infoBoxHeader {
+    float: left;
+    width: 100%;
+    height: 10px;
+    border-bottom: 1px solid;
+    background-color: white;
+    
+    cursor: -webkit-grab;
+    cursor: grab;
+    
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.closeButton {
+    width: 10px;
+    float: left;
+    margin-left: calc(100% - 15px);
+    border: 1px solid;
+}

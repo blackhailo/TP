@@ -55,11 +55,16 @@ class MainHandler(webapp2.RequestHandler):
         if tileID == None:
             tileID = "1"
             
-        # self.response.write(PID + " " + tileID)
         TPList = DSStructure.getTP_v2(PID, tileID)
         
         if TPList:
-            parentTile = TPList[0]
+            parentTile = None
+            
+            for nodeDict in TPList:
+                if nodeDict.get("id") == int(tileID):
+                    parentTile = nodeDict
+                    break
+            
             breadCrumbData = DSStructure.resolveTiles(PID, parentTile.get("parent_path"))            
             
             template = self.webtemplate("draft.html")
