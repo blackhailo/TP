@@ -11,7 +11,7 @@ function syncTileData(tile, successFunc){
    });
    $.ajax({
        type: "POST",
-       url: "update/" + TS.PID,
+       url: "../update/" + TS.PID,
        data: {
            "change_type":"modify",
            "data": dataComponent
@@ -53,9 +53,33 @@ class DragState {
    constructor(){
        this.dragStartPos = null;
        this.dragStartCursorPos = null;
-       
        this.dragInfoBox = null;
        this.dragTile = null;
+   }
+}
+
+class UserState {
+   constructor(){
+      this.activeUser = 1;
+      this.informationBoxState = {"left": 100,
+                                  "top": 100,
+                                  "display": "none"};
+   }
+   
+   setUserStateData(stateData){
+      const newUserState = {"left": stateData.left,
+                            "top": stateData.top,
+                            "display": stateData.display}
+      
+      this.informationBoxState = newUserState;
+   }
+   
+   update(){
+      const infoBox = $("#infoBox");
+      
+      infoBox.css("left", this.informationBoxState.left);
+      infoBox.css("top", this.informationBoxState.top);
+      infoBox.css("display", this.informationBoxState.display);
    }
 }
 
@@ -74,6 +98,7 @@ class TileState {
        }
        this.tileLookup = {};
        this.tileChildren = {};
+       this.visableTileChildren = {};
        this.selectedTileIDList = [];
        
        this.tileClipboard = [];
@@ -144,8 +169,14 @@ class TileState {
    
    setParentAsso(tileChildren, tile){
       if(tile.parentID !== null){
-         const childList = tileChildren[tile.parentID];
-         childList.push(tile);
+         try {
+            const childList = tileChildren[tile.parentID];
+            childList.push(tile);
+         } catch (err){
+            console.log(tile);
+            console.log(err.message);
+         }
+         
       }
    }
    
@@ -204,7 +235,10 @@ class TileState {
          let targetTile = findNode(tileID);
          targetTile.addClass("selected");
       }
-      this.selectedTileIDList.push(tileID);
+      
+      if (this.selectedTileIDList.indexOf(tileID) === -1){
+         this.selectedTileIDList.push(tileID);
+      }
    }
    
    resetSelectedTiles() {
@@ -255,6 +289,7 @@ var editType = null;
 
 var DS = new DragState();
 var TS = new TileState();
+var US = new UserState();
 
 function dragInteraction(event){
    if (DS.dragTile && this != DS.dragTile){
@@ -296,7 +331,7 @@ function dragInteraction(event){
 function removeAjax(targetID, succesFunc) {
    $.ajax({
        type: "POST",
-       url: "update/" + TS.PID,
+       url: "../update/" + TS.PID,
        data: {"change_type":"remove",
               "data": JSON.stringify({"node_id": targetID})},
        success: succesFunc,
@@ -311,57 +346,70 @@ function removeTile(originID, reload=false) {
        return;
    }
    
-   success = function(){
-       TS.removeParentAsso(target);
-       TS.removeCachedTile(originID);
-       
-       loadData();
-   };
+   const childList = TS.tileChildren[originID].slice();
+   for (let i=0; i < childList.length; i++){
+      childItem = childList[i];
+      removeTile(childItem.id)
+   }
    
-   removeAjax(originID, success);
+   removeAjax(originID, response => {
+      if (response.status === "success"){
+         TS.removeParentAsso(target);
+         TS.removeCachedTile(originID);
+         
+         if (reload){
+            loadData();
+         }
+      }
+   });
 }
 
 function acceptEdit(){
    editPromt = $("#editPromt");
-   originID = origin.attr("nid");
-   
+   const selectionList = originSelectionList;
    if (editType == "rename"){
-       const inputField = editPromt.children("#editPromtInput");
-       const newLabel = inputField.val();
-       const tile = TS.getTile(originID);
-       tile.label = newLabel;
-       
-       syncTileData(tile, function(){
-           loadData();            
-       });
+      originID = selectionList[0];
+      const inputField = editPromt.children("#editPromtInput");
+      const newLabel = inputField.val();
+      const tile = TS.getTile(originID);
+      tile.label = newLabel;
+      
+      syncTileData(tile, response => {
+         if (response.status === "success"){
+            loadData();
+         }
+      });
    } else if (editType == "remove"){
-       const selectionList = TS.getSelectionList();
-       for (let i = 0; i < selectionList.length; i++){
-           const cID = selectionList[i];
-           removeTile(cID, true);
-       }
-       
+      for (let i = 0; i < selectionList.length; i++){
+         const cID = selectionList[i];
+         removeTile(cID, true);
+      }
    } else if (editType == "add"){
-       inputField = editPromt.children("#editPromtInput");
-       newLabel = inputField.val();
-       
-       $.ajax({
-           type: "POST",
-           url: "update/" + TS.PID,
-           data: {"change_type":"add",
-                  "data": JSON.stringify({"parent_id": originID,
-                                          "label": newLabel})},
-           success: function(response){
-               newNodeID = response.id;
-               ordering = response.ordering;
+      originID = selectionList[0];
+      inputField = editPromt.children("#editPromtInput");
+      newLabel = inputField.val();
+      
+      $.ajax({
+         type: "POST",
+         url: "../update/" + TS.PID,
+         data: {"change_type":"add",
+                "data": JSON.stringify({"parent_id": originID,
+                                        "label": newLabel})},
+         success: response => {
+            if (response.status === "success"){
+               const responseData = response.data
                
-               TS.setTile(response);
+               newNodeID = responseData.id;
+               ordering = responseData.ordering;
+               
+               TS.setTile(responseData);
                TS.setParentAsso(TS.tileChildren, TS.getTile(newNodeID));
                
                loadData();
-           },
-           dataType: "json"
-       });
+            }
+         },
+         dataType: "json"
+      });
    }
    
    origin = null;
@@ -377,13 +425,14 @@ function cancelEdit(){
 }
 
 function zoom(origin){
-   const urlComp = window.location.href;
-   originID = origin.attr("nid");
+   originSelectionList = TS.getSelectionList().slice();
+   originID = originSelectionList[0];
    
    rightClickMenu = $("#clickClickMenu");
    rightClickMenu.css("display", "none");
    
-   window.location.href = urlComp.split("_")[0] + "_" + originID;
+   const newUrl = window.location.origin + "/TP/" + TS.PID + "_" + originID;
+   window.location.href = newUrl;
 }
 
 function reorderFunc(nID, reorderNr){
@@ -395,13 +444,11 @@ function reorderFunc(nID, reorderNr){
        
        $.ajax({
            type: "POST",
-           url: "update/" + TS.PID,
+           url: "../update/" + TS.PID,
            data: {
                "change_type":"modify",
                "data": dataComponent
                },
-           success: function(){
-           },
            dataType: "json"
        });
    }
@@ -435,8 +482,8 @@ function reorderFunc(nID, reorderNr){
    rightClickMenu.css("display", "none");
 }
 
-function addFunc(originBlock){
-   origin = originBlock;
+function addFuncSuperTile(){
+   originSelectionList = [TS.parentTileID];
    editType = "add";
    
    rightClickMenu = $("#clickClickMenu");
@@ -445,8 +492,18 @@ function addFunc(originBlock){
    showEditPromt();
 }
 
-function renameFunc(originBlock){
-   origin = originBlock;
+function addFunc(){
+   originSelectionList = TS.getSelectionList().slice();
+   editType = "add";
+   
+   rightClickMenu = $("#clickClickMenu");
+   rightClickMenu.css("display", "none");
+   
+   showEditPromt();
+}
+
+function renameFunc(){
+   originSelectionList = TS.getSelectionList().slice();
    editType = "rename";
    
    rightClickMenu = $("#clickClickMenu");
@@ -455,8 +512,8 @@ function renameFunc(originBlock){
    showEditPromt();
 }
 
-function removeFunc(originBlock){
-   origin = originBlock;
+function removeFunc(){
+   originSelectionList = TS.getSelectionList().slice();
    editType = "remove";
    
    rightClickMenu = $("#clickClickMenu");
@@ -472,15 +529,14 @@ function showEditPromt(){
    editInput = $("#editPromtInput");
    
    if (editType == "rename"){
-       editHeader.text("Rename");
-       editInput.show();
-       
-       originLabelNode = origin.children(".tile_label ");
-       originLabel = originLabelNode.text();
-       editInput.val(originLabel);
+      const originTile = TS.getTile(originSelectionList[0]);
+      
+      editHeader.text("Rename");
+      editInput.show();
+      editInput.val(originTile.label);
    } else if (editType == "remove"){
-       editHeader.text("Are you sure you want to remove?");
-       editInput.hide();
+      editHeader.text("Are you sure you want to remove?");
+      editInput.hide();
    } else {
        editHeader.text("Add");
        editInput.show();
@@ -492,51 +548,54 @@ function showEditPromt(){
 }
 
 function changeStatus(event, newStatus){
-    rightClickMenu = $("#clickClickMenu");
-    rightClickMenu.css("display", "none");
+   rightClickMenu = $("#clickClickMenu");
+   rightClickMenu.css("display", "none");
+   
+   const currentSelection = TS.getSelectionList().slice();
+   
+   dataComponent = JSON.stringify({
+      "node_id_list": currentSelection,
+      "status": newStatus
+   });
     
-    const currentSelection = TS.getSelectionList().slice();
-    
-    dataComponent = JSON.stringify({
-        "node_id_list": currentSelection,
-        "status": newStatus
-    });
-    
-    $.ajax({
-        type: "POST",
-        url: "update/" + TS.PID,
-        data: {"change_type":"modify",
-               "data": dataComponent
-               },
-        success: function(){
+   $.ajax({
+      type: "POST",
+      url: "../update/" + TS.PID,
+      data: {"change_type":"modify",
+             "data": dataComponent
+             },
+      success: response => {
+         if (response.status === "success"){
             for (let i = 0; i < currentSelection.length; i++){
-                const tileID = currentSelection[i];
-                const targetTileLookup = TS.getTile(tileID);
-                targetTileLookup.status = newStatus;
-                const targetTile = findNode(tileID);
-                
-                let classString = "tile selected";
-                if (targetTile.hasClass("small_square")){
-                    classString = classString + " small_square";
-                }
-                
-                if (newStatus === 0){
-                    classString = classString + " new";
-                } else if (newStatus === 1){
-                    classString = classString + " default";
-                } else if (newStatus === 2){
-                    classString = classString + " started";
-                } else if (newStatus === 3){
-                    classString = classString + " issues";
-                } else if (newStatus === 4){
-                    classString = classString + " done";
-                }
-     
-                targetTile.attr("class", classString);    
-            }                
-        },
-        dataType: "json"
-    });
+               const tileID = currentSelection[i];
+               const targetTileLookup = TS.getTile(tileID);
+               targetTileLookup.status = newStatus;
+               const targetTile = findNode(tileID);
+               
+               let classString = "tile selected";
+               if (targetTile.hasClass("small_square")){
+                  classString = classString + " small_square";
+               }
+               
+               if (newStatus === 0){
+                  classString = classString + " new";
+               } else if (newStatus === 1){
+                  classString = classString + " default";
+               } else if (newStatus === 2){
+                  classString = classString + " started";
+               } else if (newStatus === 3){
+                  classString = classString + " issues";
+               } else if (newStatus === 4){
+                  classString = classString + " done";
+               }
+               targetTile.attr("class", classString);    
+            }
+         } else {
+            console.log(response.message)
+         }
+      },
+      dataType: "json"
+   });
 }
 
 function clickTile(event, originNode){
@@ -585,22 +644,22 @@ function showDropdown(event, originNode){
    if (tileID === TS.parentTileID){
       /* SUPER BLOCK DROPDOWN */
       contentList = [["Modify", "Header"],
-                     ["add", function (){addFunc(originNode);}],
-                     ["rename", function (){renameFunc(originNode);}],
-                     ["debug", function (){console.log("ged");}]];
+                     ["add", () => addFuncSuperTile()],
+                     ["rename", () => renameFunc()],
+                     ["debug", () => console.log("ged")]];
    } else {
       /* TILE DROPDOWN */
       contentList = [["Status", "Header"],
-                     ["started", function (event){changeStatus(event, 2);}],
-                     ["done", function (event){changeStatus(event, 4);}],                                                      
-                     ["issues", function (event){changeStatus(event, 3);}],
-                     ["default", function (event){changeStatus(event, 1);}],
+                     ["started", event => changeStatus(event, 2)],
+                     ["done", event => changeStatus(event, 4)],
+                     ["issues", event => changeStatus(event, 3)],
+                     ["default", event => changeStatus(event, 1)],
                      
                      ["Modify", "Header"],
-                     ["zoom", function (){zoom(originNode);}],
-                     ["add", function (){addFunc(originNode);}],
-                     ["rename", function (){renameFunc(originNode);}],
-                     ["remove", function (){removeFunc(originNode);}]];
+                     ["zoom", () => zoom()],
+                     ["add", () => addFunc()],
+                     ["rename", () => renameFunc()],
+                     ["remove", () => removeFunc()]];
    }
    for (let i = 0; i < contentList.length; i++){
        menuLabel = contentList[i][0];
@@ -656,42 +715,43 @@ function resizeLayout(){
    morePanel.width(moreWidthSize);
 }
 
-function initTP(){
-   dataVersion = $('#data_version').val();
+function filterChildren(childrenList){
+   const filterMatchDS = TS.getFilterMatchDS();
+   const activeKeyNames = Object.keys(filterMatchDS);
    
-   if (dataVersion == "1"){
-       rawCrumbField = $('#crumb_field').val();
-       dataList = JSON.parse(rawCrumbField);
-       for (let i=0; i<dataList.length; i++){
-           TS.setTile(dataList[i]);
-       }
-       
-       rawDataField = $('#data_field').val();
-       dataList = JSON.parse(rawDataField);
-       
-       for (let i=0; i<dataList.length; i++){
-           TS.setTile(dataList[i]);
-       }
-       
-       TS.initParentAsso();
+   if (activeKeyNames.length > 0){
+      const filteredList = [];
+      
+      for (let ithElement = 0; ithElement < childrenList.length; ithElement++){
+         const childTile = childrenList[ithElement];
+         
+         for(let i=0; i < activeKeyNames.length; i++){
+            const activeKey = activeKeyNames[i];
+            const childFilterKeyValue = childTile[activeKey];
+            const allowedValuesSet = filterMatchDS[activeKey];
+            
+            if (allowedValuesSet.has(childFilterKeyValue)){
+               filteredList.push(childTile);
+               break;
+            }
+         }
+      }
+      return filteredList;
+   } else {
+      return childrenList;
    }
 }
 
 function loadData(){
-    var renderTileQueue = [];
-    
-    dataVersion = $('#data_version').val();
- 
-    /* NEW VERSION */
-    superTile = $("#super_tile");
-    superTile.unbind();
-    
-    superTile.bind("contextmenu", function(event) {
-         showDropdown(event, $(this));
-         
-         event.preventDefault();
-         event.stopPropagation();
-     });
+   superTile = $("#super_tile");
+   superTile.unbind();
+   
+   superTile.bind("contextmenu", function(event) {
+        showDropdown(event, $(this));
+        
+        event.preventDefault();
+        event.stopPropagation();
+   });
    
    superTile.bind("mousedown", function(event) {
       if (event.which != 3){
@@ -727,7 +787,7 @@ function loadData(){
        let curPathID = parentPath[i];
        
        const curTile = TS.getTile(curPathID);
-       crumbNode = $('<a href="/' + TS.PID + '_' + curTile.id + '" class="crumbLink">' + curTile.label + '</div>');
+       crumbNode = $('<a href="/TP/' + TS.PID + '_' + curTile.id + '" class="crumbLink">' + curTile.label + '</div>');
        
        parentLabelNodeList.push(crumbNode);
        if (i + 1 != parentPath.length){
@@ -771,28 +831,13 @@ function loadData(){
    }
    
    superTileIndicator.addClass(statusClass);
-
-   const childrenList = TS.tileChildren[TS.parentTileID];
-   const nrOfSiblings = childrenList.length;
    
-   const filterMatchDS = TS.getFilterMatchDS();
-   const activeKeyNames = Object.keys(filterMatchDS);
-   for (let ithElement = 0; ithElement < nrOfSiblings; ithElement++){
-      childTile = childrenList[ithElement];
-      
-      if (activeKeyNames.length > 0){
-         for(let i=0; i < activeKeyNames.length; i++){
-            const activeKey = activeKeyNames[i];
-            const childFilterKeyValue = childTile[activeKey];
-            const allowedValuesSet = filterMatchDS[activeKey];
-            
-            if (allowedValuesSet.has(childFilterKeyValue)){
-               renderTileQueue.push(childTile);
-            }
-         }
-      } else {
-         renderTileQueue.push(childTile);
-      }
+   let renderTileQueue = [];
+   
+   const childrenList = TS.tileChildren[TS.parentTileID];
+   const filteredChildrenList = filterChildren(childrenList);
+   for (let i=0; i<filteredChildrenList.length; i++){
+      renderTileQueue.push(filteredChildrenList[i]);
    }
    
    doSetup = true;
@@ -822,7 +867,9 @@ function initBlock(renderTileQueue, renderTile){
    let parentWidth = parentTile.width();
    let parentHeight = parentTile.height() - parentLabel.outerHeight();
    
-   const nrOfSiblings = TS.tileChildren[renderTile.parentID].length;
+   const filteredChildrenSiblingList = filterChildren(TS.tileChildren[renderTile.parentID]);
+   
+   const nrOfSiblings = filteredChildrenSiblingList.length;
    const gridDimensions = Math.ceil(Math.sqrt(nrOfSiblings));
    
    let col = gridDimensions;
@@ -900,36 +947,91 @@ function initBlock(renderTileQueue, renderTile){
    });
    
    injectTile.bind("mouseup", dragInteraction);
-    
+   
    if (!injectTile.hasClass("small_square")){
-      const childrenList = TS.tileChildren[renderTile.id];
-      const nrOfChildren = childrenList.length;
+      const childrenList = filterChildren(TS.tileChildren[renderTile.id]);
       
-      const filterMatchDS = TS.getFilterMatchDS();
-      const activeKeyNames = Object.keys(filterMatchDS);
-      for (let ithElement = 0; ithElement < nrOfChildren; ithElement++){
+      for (let ithElement = 0; ithElement < childrenList.length; ithElement++){
          childTile = childrenList[ithElement];
-         
-         if (activeKeyNames.length > 0){
-            for(let i=0; i < activeKeyNames.length; i++){
-               const activeKey = activeKeyNames[i];
-               const childFilterKeyValue = childTile[activeKey];
-               const allowedValuesSet = filterMatchDS[activeKey];
-               
-               if (allowedValuesSet.has(childFilterKeyValue)){
-                  renderTileQueue.push(childTile);
-               }
+         renderTileQueue.push(childTile);
+      }
+   }
+}
+
+/*
+   USER STATE
+*/
+function fetchResource(endpoint, params={}){
+   return new Promise((resolve, reject) => {
+      $.ajax({
+      type: "GET",
+      url: "../" + endpoint,
+      data: params,
+      converters: {
+         "text json": response => {
+            const jsonResponse = JSON.parse(response)
+            
+            if (jsonResponse.status === "success"){
+               return jsonResponse.data  
+            } else {
+               reject(new Error(jsonResponse.message))
             }
-         } else {
-            renderTileQueue.push(childTile);
          }
+      },
+      dataType: "json"
+      })
+      .done(resolve)
+      .fail(reject);
+   })
+}
+
+async function initTileApp(){
+   try {
+      let results = await Promise.all([
+         fetchResource("vault", {"dataType":"getTileData",
+                                 "PID":TS.PID,
+                                 "parentTileID":TS.parentTileID}),
+         fetchResource("vault", {"dataType":"getTileCrumbData",
+                                 "PID":TS.PID,
+                                 "parentTileID":TS.parentTileID}),
+         fetchResource("vault", {"dataType":"getUserState",
+                                 "userID":US.activeUser})
+      ])
+      
+      tileDataList = results[0];
+      crumbDataList = results[1];
+      userState = results[2];
+      
+      //INIT USER STATE
+      US.setUserStateData(userState)
+      US.update();
+      
+      //INIT TILESTATE
+      for (let i=0; i<crumbDataList.length; i++){
+          TS.setTile(crumbDataList[i]);
+      }
+      
+      for (let i=0; i<tileDataList.length; i++){
+          TS.setTile(tileDataList[i]);
+      }
+      
+      TS.initParentAsso();
+      loadData();
+      
+      $("#loadingOverlay").remove();
+   } catch (err){
+      if (err.message === "no access"){
+         window.location.replace("/login")
       }
    }
 }
 
 resizeLayout();
-initTP();
-loadData();
+initTileApp();
+
+//var lastname = window.sessionStorage;
+//console.log(decodeURIComponent(document.cookie))
+//loadUserState();
 
 /* BIND GUI AND UTIL FUNCTIONS */
 $("#infoBoxHeader").bind("mousedown", function(event){
@@ -939,10 +1041,6 @@ $("#infoBoxHeader").bind("mousedown", function(event){
    DS.dragStartPos = [oldPos.left, oldPos.top];
    DS.dragStartCursorPos = [event.screenX, event.screenY];
 });
-
-$("#infoBoxHeader").bind("mouseup", function(){
-});
-
 
 $("#button_options").bind("click", function(){
    console.log("options");
@@ -967,11 +1065,37 @@ $("#promt_close").bind("click", function(){
 $("#button_details").bind("click", function(){
    const infoBox = $("#infoBox");
    
+   let display = null;
    if (infoBox.css("display") == "none"){
-       infoBox.css("display", "block");
+      display = "block";
    } else {
-       infoBox.css("display", "none");
+      display = "none";
    }
+   
+   const left = infoBox.css("left");
+   const top = infoBox.css("top");
+   
+   
+   const newInfoBoxState = {"left": left,
+                            "top": top,
+                            "display": display}
+   
+   US.informationBoxState = newInfoBoxState;
+   
+   $.ajax({
+      type: "POST",
+      url: "../updateUserState",
+      data: {
+         "operation":"infoBoxChange",
+         "data": JSON.stringify(US.informationBoxState)
+         },
+      success: response => {
+         console.log(response)
+      },
+      dataType: "json"
+   });
+   
+   US.update();
 });
 
 $("#button_filter").bind("click", function(){
@@ -1129,6 +1253,12 @@ $(window).keydown(function(event){
    }
 });
 
+$(window).keyup(function(event){
+   if (event.which == 46){
+      removeFunc();
+   }
+});
+
 $(window).keypress(function(event){
    if (event.which == 13){
        editPromt = $("#editPromt");
@@ -1140,36 +1270,61 @@ $(window).keypress(function(event){
 
 $(window).mousemove(function(event) {
    if(DS.dragInfoBox){
-       deltaX = event.screenX - DS.dragStartCursorPos[0];
-       deltaY = event.screenY - DS.dragStartCursorPos[1];
-       
-       let newXPos = DS.dragStartPos[0] + deltaX;
-       let newYPos = DS.dragStartPos[1] + deltaY;
-       
-       const infoBoxWidth = DS.dragInfoBox.outerWidth();
-       const infoBoxHeight = DS.dragInfoBox.outerHeight();
-       
-       superTile = $("#super_tile");
-       const rightMostX = superTile.width();
-       const bottomMostY = superTile.height();
-       //let parentSizeX = ;  
-       
-       if (newXPos < 0){
-           newXPos = 0;
-       } else  if (newXPos + infoBoxWidth > rightMostX){
-           newXPos = rightMostX - infoBoxWidth;
-       }
-       if (newYPos < 0){
-           newYPos = 0;
-       } else  if (newYPos + infoBoxHeight > bottomMostY){
-           newYPos = bottomMostY - infoBoxHeight;
-       }
-       
-       DS.dragInfoBox.css({top: newYPos, left: newXPos});
+      deltaX = event.screenX - DS.dragStartCursorPos[0];
+      deltaY = event.screenY - DS.dragStartCursorPos[1];
+      
+      let newXPos = DS.dragStartPos[0] + deltaX;
+      let newYPos = DS.dragStartPos[1] + deltaY;
+      
+      const infoBoxWidth = DS.dragInfoBox.outerWidth();
+      const infoBoxHeight = DS.dragInfoBox.outerHeight();
+      
+      superTile = $("#super_tile");
+      const rightMostX = superTile.width();
+      const bottomMostY = superTile.height();
+      //let parentSizeX = ;  
+      
+      if (newXPos < 0){
+          newXPos = 0;
+      } else  if (newXPos + infoBoxWidth > rightMostX){
+          newXPos = rightMostX - infoBoxWidth;
+      }
+      if (newYPos < 0){
+          newYPos = 0;
+      } else  if (newYPos + infoBoxHeight > bottomMostY){
+          newYPos = bottomMostY - infoBoxHeight;
+      }
+            
+      DS.dragInfoBox.css({left: newXPos, top: newYPos});
    }
 });
 
 $(window).mouseup(function() {
+   if (DS.dragInfoBox){
+      const left = DS.dragInfoBox.css("left")
+      const top = DS.dragInfoBox.css("top")
+      const isShown = DS.dragInfoBox.css("display")
+      
+      const newInfoBoxState = {"left": left,
+                               "top": top,
+                               "display": isShown}
+      
+      US.informationBoxState = newInfoBoxState;
+      
+      $.ajax({
+         type: "POST",
+         url: "../updateUserState",
+         data: {
+            "operation":"infoBoxChange",
+            "data": JSON.stringify(US.informationBoxState)
+            },
+         success: response => console.log(response),
+         dataType: "json"
+      });
+      
+      US.update();
+   }
+   
    DS.dragTile = null;
    DS.dragInfoBox = null;
 });

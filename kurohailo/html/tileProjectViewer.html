@@ -2,11 +2,13 @@
 <html>
 <head>
     <title>Tile Planer</title>
-    <link rel="stylesheet" href="css/draft.css">
-    <script src="scripts/jquery-1.11.3.min.js"></script>
+    <link rel="stylesheet" href="../css/draft.css">
+    <script src="../scripts/jquery-1.11.3.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 </head>
 <body>
+    <div id="loadingOverlay">Loading please wait...</div>
+    
     <div id="clickClickMenu"></div>    
     <div id="infoBox">
         <div id="infoBoxHeader">
@@ -36,11 +38,11 @@
         <div id="super_tile_indicator"></div>
         <div class="tile_label outer_label_sizing"></div>
         <div id="project_buttons">
-            <div class="p_button" id="button_more"><img src="images/more-512.png"></div>
-            <div class="p_button" id="button_options"><img src="images/17214.png"></div>
-            <div class="p_button" id="button_details"><img src="images/download.png"></div>
+            <div class="p_button" id="button_more"><img src="../images/more-512.png"></div>
+            <div class="p_button" id="button_options"><img src="../images/17214.png"></div>
+            <div class="p_button" id="button_details"><img src="../images/download.png"></div>
             <div class="p_button" id="button_filter">
-                <img src="images/filter_list_black_192x192.png">
+                <img src="../images/filter_list_black_192x192.png">
                 <div id="active_filter_count">0</div>
             </div>
         </div>
@@ -53,9 +55,6 @@
         <div id="promt_content"></div>
         <div id="promt_footer"></div>
     </div>
-    <input id="data_version" type="hidden" value='<!--DATA VERSION-->'>
-    <input id="crumb_field" type="hidden" value='<!--CRUMB FIELD-->'>
-    <input id="data_field" type="hidden" value='<!--DATA FIELD-->'>
 </body>
-<script src="scripts/coreScripts.js"></script>
+<script src="../scripts/coreScripts.js"></script>
 </html>

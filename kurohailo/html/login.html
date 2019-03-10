@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tile Planer v0.02</title>
+        <link rel="stylesheet" href="css/main.css">
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <script src="scripts/jquery-1.11.3.min.js"></script>
+    </head>
+    <body>
+        <div class="headerBar">
+            <a href="/"><div class="headerTitle">Tile Planer v0.02</div></a>
+            <div class="headerBarButton activeHeaderBarButton">Login</div>
+            <a href="/signup"><div class="headerBarButton">Signup</div></a>
+        </div>
+        <div class="loginBlock">
+            <form id="loginForm">
+                <div class="loginBlockWidget">
+                    <div class="newUserBlockLabel">Email:</div>
+                    <div class="newUserBlockInput"><input type="text" name="email"></div>
+                </div>
+                <div class="loginBlockWidget">
+                    <div class="newUserBlockLabel">Password:</div>
+                    <div class="newUserBlockInput"><input type="password" name="password"></div>
+                </div>
+                <button id="loginBlockSubmit">Login</button>
+            </form>
+        </div>
+        <script>
+            $("#loginForm").submit(event => {
+                event.preventDefault();
+                
+                email = $("input[name='email']").val()
+                password = $("input[name='password']").val()
+                
+                //show loading gif
+                $.ajax({
+                    type: "POST",
+                    url: "/login",
+                    data: {"email": email,
+                           "password":password},
+                    success: response => {
+                        if (response.status === "success"){
+                            window.location.replace("/console");
+                        } else {
+                            console.log(response);
+                        }
+                    },
+                    dataType: "json"
+                });
+            });
+        </script>
+    </body>
+</html>

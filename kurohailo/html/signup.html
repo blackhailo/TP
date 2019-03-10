@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tile Planer v0.02</title>
+        <link rel="stylesheet" href="css/main.css">
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <script src="scripts/jquery-1.11.3.min.js"></script>
+    </head>
+    <body>
+        <div class="headerBar">
+            <a href="/"><div class="headerTitle">Tile Planer v0.02</div></a>
+            <a class="headerBarLink" href="/login"><div class="headerBarButton">Login</div></a>
+            <div class="headerBarButton activeHeaderBarButton">Signup</div>
+        </div>
+        <div class="newUserBlock">
+            <form id="loginForm">
+                <div class="newUserBlockWidget">
+                    <div class="newUserBlockLabel">Username:</div>
+                    <div class="newUserBlockInput"><input type="text" name="username"></div>
+                </div>
+                <div class="newUserBlockWidget">
+                    <div class="newUserBlockLabel">Email:</div>
+                    <div class="newUserBlockInput"><input type="text" name="email"></div>
+                </div>
+                <div class="newUserBlockWidget">
+                    <div class="newUserBlockLabel">Password:</div>
+                    <div class="newUserBlockInput"><input type="password" name="password"></div>
+                </div>
+                <button id="newUserBlockSubmit">Create user for Tileplaner</button>
+            </form>
+        </div>
+        <script>
+            $("#loginForm").submit(event => {
+                event.preventDefault();
+                
+                username = $("input[name='username']").val()
+                email = $("input[name='email']").val()
+                password = $("input[name='password']").val()
+                
+                //show loading gif
+                $.ajax({
+                    type: "POST",
+                    url: "/signup",
+                    data: {"username":username,
+                           "email": email,
+                           "password":password},
+                    success: response => {
+                        if (response.status === "success"){
+                            window.location.replace("/login");
+                        } else {
+                            console.log(response);
+                        }
+                    },
+                    dataType: "json"
+                });
+            });
+        </script>
+    </body>
+</html>

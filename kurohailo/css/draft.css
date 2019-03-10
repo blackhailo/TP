@@ -1,3 +1,16 @@
+/* LOADING OVERLAY */
+#loadingOverlay{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    display: block;
+    padding: 50px;
+    
+    z-index: 100;
+}
+
+
 /* WORK */
 .selected {
     border: 2px solid #1E90FF !important;
@@ -446,12 +459,14 @@ body {
 #infoBox {
     position: absolute;
     display: none;
-    left: 10px;
-    top: 10px;
-    width: 98px;
-    height: 98px;
+    left: 0px;
+    top: 0px;
+    width: 198px;
+    height: 198px;
     
     border: 1px solid;
+    
+    z-index: 10;
     
     background-color: white;
     

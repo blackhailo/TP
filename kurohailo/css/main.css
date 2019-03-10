@@ -1,0 +1,102 @@
+body {
+    margin: 0px;
+    font-family: Roboto;
+}
+.headerBar {
+    float: left;
+    width: 100%
+}
+.activeHeaderBarButton {
+    background-color: white !important;
+    color: cornflowerblue !important;
+}
+
+.headerBar a {
+    color: black;
+}
+.headerTitle {
+    font-weight: bold;
+    font-size: 20px;
+    font-style: italic;
+    float: left;
+    clear:left;
+    padding: 5px;
+    
+    width: calc(100% - 218px);
+    height: 25px;
+    line-height: 25px;
+}
+.headerBarButton {
+    float: right;
+    margin: 2px;
+    padding: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    
+    width: 78px;
+    height: 23px;
+    line-height: 25px;
+    text-align: center;
+    
+    border: 1px solid cornflowerblue;
+    background-color: cornflowerblue;
+    color: white;
+}
+
+.textSection {
+    float: left;
+    padding: 10px;
+}
+.clear {
+    clear: left;
+}
+.section {
+    float: left;
+    width: 50%;
+}
+
+.newUserBlock, .loginBlock {
+    float: left;
+    border-radius: 5px;
+    margin-top: 60px;
+    margin-left: calc(50% - 220px);
+    padding: 20px;
+    width: 400px;
+    background-color: cornflowerblue
+}
+
+.newUserBlockWidget, .loginBlockWidget {
+    float: left;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.newUserBlockLabel, .loginBlockLabel {
+    float: left;
+    width: calc(100% - 10px);
+}
+
+.newUserBlockInput, .loginBlockInput {
+    float: left;
+    width: 100%;
+}
+
+.newUserBlockInput input, .loginBlock input {
+    border-radius: 5px;
+    font-size: 16px;
+    line-height: 14px;
+    height: 20px;
+    padding: 10px;
+    width: calc(100% - 25px);
+}
+#newUserBlockSubmit, #loginBlockSubmit {
+    width: 100%;
+    padding: 20px 32px;
+    color: #ffffff;
+    background-color: #214196;
+    border-color: #214196;
+    border: 1px solid #214196;
+    border-radius: 3px;
+    
+    cursor: pointer;
+}
