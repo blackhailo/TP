@@ -310,6 +310,21 @@ class InitHandler(BaseHandler):
         counter = DSStructure.Counter(id="0")
         counter.nextPID = 0
         counter.put()
+        
+class HackHandler(BaseHandler):
+    def get(self):
+        self.response.write("init")
+        
+        projectName = "hackProject"
+        
+        nextPID = DSStructure.getNextPID_v2()
+        
+        nodeData = {"label": projectName}
+        
+        DSStructure.insertTP_v2(nextPID, 1, None) # INSERT PARENT NODE
+        DSStructure.modifyTP(nextPID, 1, nodeData) # INSERT NODE DATA
+        
+        self.response.write(nextPID)
 
 
 CONFIG = {
@@ -331,6 +346,7 @@ app = webapp2.WSGIApplication([
     ##TILEPLANNER MAIN VIEW
     webapp2.Route('/TP/<:\w+>_<:\w+>', handler=TileHandler, schemes=ALLOWED_SCHEMES),
     webapp2.Route('/TP/<:\w+>', handler=TileHandler, schemes=ALLOWED_SCHEMES),
+    
     ##STANDART ENDPOINTS
     webapp2.Route('/login', handler=LoginHandler, schemes=ALLOWED_SCHEMES),
     webapp2.Route('/logout', handler=LogoutHandler, schemes=ALLOWED_SCHEMES),
@@ -339,6 +355,7 @@ app = webapp2.WSGIApplication([
     
     ##HACKY ADMIN ENDPOINTS
     webapp2.Route('/init', handler=InitHandler, schemes=ALLOWED_SCHEMES),
+    webapp2.Route('/projecthack', handler=HackHandler, schemes=ALLOWED_SCHEMES),
     
     ############################
     webapp2.Route('/', handler=MainHandler, schemes=ALLOWED_SCHEMES)

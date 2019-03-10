@@ -77,7 +77,10 @@ class UserState(ndb.Model):
 def getUserStateDict(userID):
     userState = UserState.get_by_id(userID)
     
-    return userState.userStateDict
+    if userState:
+        return userState.userStateDict
+    else:
+        return {}
     
 ## QUERY
 def runQuery(gqlStringQuery, fetchAmount, idOnly=False, cursor=None, projection=None):

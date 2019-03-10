@@ -902,7 +902,7 @@ function initBlock(renderTileQueue, renderTile){
        statusClass = "done";
    }
    
-   const injectTile = $('<div class="tile"></div>');
+   const injectTile = $('<div class="tile noSelect"></div>');
    injectTile.attr("nid", renderTile.id);
    injectTile.css("margin-left", usedMargin);
    injectTile.css("margin-top", usedMargin);
@@ -1124,7 +1124,7 @@ $("#button_filter").bind("click", function(){
       filterWordKeyList = Object.keys(TS.filterLookup);
       for (let i = 0; i < filterWordKeyList.length; i++){
          const filterWord = filterWordKeyList[i];
-         const filterButtonTemplate = '<div class="filter_button" id="' + filterWord + '">' + filterWord + '</div>';
+         const filterButtonTemplate = '<div class="filter_button noSelect" id="' + filterWord + '">' + filterWord + '</div>';
          const templateNode = $(filterButtonTemplate);
          
          templateNode.bind("click", filterClickFunc);
@@ -1138,8 +1138,8 @@ $("#button_filter").bind("click", function(){
       promtModal.css("display", "block");
       
       promtFooter.empty();
-      const resetButton = $('<div class="promt_submit" id="filter_reset_button">reset</div>');
-      const applyButton = $('<div class="promt_submit" id="filter_apply_button">apply</div>');
+      const resetButton = $('<div class="promt_submit noSelect" id="filter_reset_button">reset</div>');
+      const applyButton = $('<div class="promt_submit noSelect" id="filter_apply_button">apply</div>');
       
       resetButton.bind("click", function() {
          TS.activeFilterList = [];
